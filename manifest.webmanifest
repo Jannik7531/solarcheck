@@ -1,0 +1,1 @@
+{"name":"SolarCheck – PV-Modulhelfer","short_name":"SolarCheck","description":"PV-Module ausrichten, Lichtverhältnisse vergleichen und Leerlaufspannungen dokumentieren","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#07191c","theme_color":"#102b31","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
