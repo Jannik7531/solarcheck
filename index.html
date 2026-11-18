@@ -1,38 +1,690 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#102b31"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>SolarCheck</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><style>
-:root{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color-scheme:dark;--bg:#07191c;--panel:#123037;--line:#315057;--text:#f4f8f7;--muted:#afc5c7;--accent:#a1ed91}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}header{padding:22px 18px 12px;background:linear-gradient(155deg,#173f3c,#0b2228)}h1{margin:0;font-size:27px;letter-spacing:-.7px}header p{margin:5px 0;color:var(--muted);font-size:13px}nav{display:flex;gap:6px;padding:12px;background:var(--bg);position:sticky;top:0;z-index:2}nav button{flex:1;font-size:13px;padding:12px 4px}.tab{display:none;padding:4px 14px 70px}.tab.active{display:block}.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:17px;margin:10px 0 14px;box-shadow:0 3px 15px #0002}h2{font-size:17px;margin:0 0 14px}h3{font-size:15px;margin:16px 0 9px}p{line-height:1.45}.hint{font-size:13px;color:var(--muted)}.warn{color:#ffcc95}.good{color:var(--accent)}label{display:block;color:var(--muted);font-size:13px;margin:11px 0 5px}input,select,button{border:1px solid #46636a;border-radius:10px;background:#0b2429;color:white;font:inherit;padding:12px;width:100%}button{background:#2c5550;font-weight:650;cursor:pointer}button.primary{background:var(--accent);color:#102b21;border-color:var(--accent)}button.active{background:var(--accent);color:#102b21}.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.big{font-size:34px;font-weight:750;letter-spacing:-1px}.mini{font-size:11px;color:var(--muted)}.meter{height:13px;border-radius:99px;background:#0b252b;overflow:hidden;margin:14px 0}.meter span{height:100%;display:block;background:linear-gradient(90deg,#6ca7b6,#a1ed91);width:0;transition:width .2s}.compass{height:220px;display:grid;place-items:center;position:relative}.ring{width:205px;height:205px;border:2px solid #698d8d;border-radius:50%;position:relative;background:radial-gradient(circle,#1f4546 2%,#0b2429 70%)}.ring:before{content:'N';position:absolute;top:5px;left:calc(50% - 6px);color:#fc9d8e;font-weight:bold}.ring:after{content:'S';position:absolute;bottom:5px;left:calc(50% - 5px);color:#c6d7d7}.needle{position:absolute;width:4px;height:83px;background:linear-gradient(#fb9d90 50%,#cbd4d2 50%);top:20px;left:calc(50% - 2px);transform-origin:50% 83px;border-radius:4px;transition:transform .2s}.target{position:absolute;top:calc(50% - 80px);left:calc(50% - 15px);width:30px;height:80px;border:2px solid var(--accent);border-radius:15px 15px 3px 3px;transform-origin:50% 80px;transition:transform .2s}.readings{display:flex;justify-content:space-between;text-align:center;gap:10px}.readings>div{flex:1}.readings strong{font-size:22px;display:block}video{width:100%;max-height:240px;object-fit:cover;border-radius:12px;background:#0b2429}canvas{display:none}small{color:var(--muted)}.entry{border-top:1px solid var(--line);padding:12px 0;font-size:13px}.entry strong{font-size:15px}.actions{display:flex;gap:9px}.actions button{flex:1}a{color:var(--accent)}.ok{background:#214c41;padding:11px;border-radius:10px}.err{background:#59392e;padding:11px;border-radius:10px}.status{min-height:20px;color:var(--muted);font-size:13px;margin-top:10px}.tip{border-left:3px solid var(--accent);padding-left:12px}footer{text-align:center;color:#6c9293;font-size:12px;padding:15px}</style></head><body><header><h1>☀ SolarCheck</h1><p>Ausrichten · Licht vergleichen · Module vergleichen</p></header><nav><button class="active" data-tab="align">Ausrichtung</button><button data-tab="light">Licht</button><button data-tab="test">Modultest</button></nav>
-<section class="tab active" id="align"><div class="card"><h2>Standort & Sonnenstand</h2><button id="locate" class="primary">📍 Standort bestimmen</button><div id="locStatus" class="status">Standort noch nicht bestimmt</div><div class="cols"><div><label>Breitengrad (°)</label><input id="lat" type="number" inputmode="decimal" step="0.0001" value="47.66"></div><div><label>Längengrad (°)</label><input id="lon" type="number" inputmode="decimal" step="0.0001" value="9.31"></div></div><p class="hint">Startwerte: Bodenseeregion. Du kannst die Koordinaten auch von Hand ändern.</p><div class="readings"><div><span class="mini">Sonnenrichtung</span><strong id="sunAz">–</strong></div><div><span class="mini">Sonnenhöhe</span><strong id="sunEl">–</strong></div></div><p id="sunState" class="hint"></p></div><div class="card"><h2>Modul einstellen</h2><p class="hint">Richte das Modul für einen festen Jahreskompromiss ungefähr nach Süden und mit 30–40° Neigung aus. Für Winterertrag ist meist eine steilere Neigung sinnvoll.</p><div class="cols"><div><label>Wunschrichtung (°)</label><input id="desiredAz" type="number" min="0" max="359" value="180"></div><div><label>Wunschneigung (°)</label><input id="desiredTilt" type="number" min="0" max="90" value="35"></div></div><button id="sensors">Kompass & Neigung aktivieren</button><div id="sensorStatus" class="status">Sensoren nicht aktiviert</div><div class="compass"><div class="ring"><div class="target" id="target"></div><div class="needle" id="needle"></div></div></div><div class="readings"><div><span class="mini">iPhone-Kompass</span><strong id="heading">–</strong></div><div><span class="mini">iPhone-Neigung*</span><strong id="tilt">–</strong></div></div><p class="hint">Halte die obere iPhone-Kante in die Richtung, in die das Modul zeigt. Für die Neigung das iPhone flach, längs auf die Modulfläche legen (Bildschirm nach oben, Oberkante Richtung höchste Modulkante). Abweichungen durch Montage, Hülle und Sensorausrichtung möglich. Der Kompass kann durch Metallgestelle verfälscht werden.</p></div></section>
-<section class="tab" id="light"><div class="card"><h2>Lichtverhältnisse vergleichen</h2><p>Mit der iPhone-Kamera lässt sich ein <strong>relativer Helligkeitsindex</strong> ermitteln – kein zuverlässiger Lux- oder W/m²-Wert.</p><video id="video" autoplay playsinline muted></video><canvas id="canvas" width="160" height="120"></canvas><div class="actions"><button id="camera" class="primary">Kamera starten</button><button id="camstop">Stoppen</button></div><div id="camStatus" class="status">Kamera aus</div><div class="big"><span id="brightness">–</span> <small>/ 100 Index</small></div><div class="meter"><span id="brightbar"></span></div><p class="hint">Automatische Belichtung verändert das Ergebnis. Vergleiche nur dieselbe Szene bei gleicher Kameraausrichtung direkt nacheinander. Für echte Einstrahlungsmessungen brauchst du ein geeignetes Pyranometer oder eine kalibrierte Messzelle.</p><label>Externer Messwert (optional, Lux)</label><input id="lux" type="number" min="0" inputmode="decimal" placeholder="z. B. 54000"><p class="hint">Lux (sichtbares Licht) ist nicht direkt mit der für PV relevanten Einstrahlung in W/m² gleichzusetzen.</p></div></section>
-<section class="tab" id="test"><div class="card"><h2>Modulprüfung</h2><p class="hint">Miss die <strong>Leerlaufspannung Voc</strong> am einzeln getrennten Modul bei Tageslicht. Zum Prüfen von Leistung und Defekten brauchst du zusätzlich Strom-/Lastmessung oder eine I-V-Kennlinie.</p><div class="cols"><div><label>Messreihe / Modultyp</label><input id="batch" placeholder="z. B. 220 W Serie A" value="220 W Module"></div><div><label>Modulkennung</label><input id="module" placeholder="z. B. Modul 1"></div><div><label>Leerlaufspannung Voc (V)</label><input id="voc" type="number" min="0" step="0.01" inputmode="decimal" placeholder="z. B. 36.5"></div><div><label>Voc laut Typenschild (V)</label><input id="ratedVoc" type="number" min="0" step="0.01" inputmode="decimal" placeholder="z. B. 37.2"></div><div><label>Temperatur Modul (°C, optional)</label><input id="temp" type="number" step="1" inputmode="decimal" placeholder="z. B. 25"></div></div><label>Beobachtung</label><select id="sky"><option value="Sonnig">Sonnig</option><option value="Leicht bewölkt">Leicht bewölkt</option><option value="Bewölkt">Bewölkt</option><option value="Schatten">Schatten</option></select><label>Notiz</label><input id="note" placeholder="z. B. Verschattung rechts unten"><p class="hint">Optional wird der externe Lux-Wert aus dem Tab „Licht“ übernommen. Kameraindex ist nicht geeignet, unterschiedliche Einstrahlung rechnerisch zu korrigieren.</p><button class="primary" id="save">Messung speichern</button><div id="testStatus" class="status"></div><div id="comparison"></div></div><div class="card"><h2>Gespeicherte Messungen</h2><div class="actions"><button id="export">CSV exportieren</button><button id="clear">Alle löschen</button></div><div id="groupSummary"></div><div id="entries"></div><p class="hint">Daten werden nur lokal auf diesem Gerät gespeichert. Löschen von Safari-Website-Daten kann sie entfernen.</p></div><div class="card"><h2>So erkennst du Auffälligkeiten</h2><p class="tip">Vergleiche Module desselben Typs unter möglichst identischen Bedingungen. Die App vergleicht Messungen derselben Messreihe bei gleicher Bewölkung innerhalb von 30 Minuten (und soweit vorhanden vergleichbarer Temperatur und Lux). Ab 5 % bzw. 10 % Abweichung wird eine Nachprüfung empfohlen. Diese Schwellen sind heuristisch, keine technischen Grenzwerte oder sichere Fehlerdiagnose.</p><p class="hint warn">Achtung: PV-Module liefern bei Licht elektrische Spannung. Auch getrennte Module sind spannungsführend. Nie Kurzschlussstrom messen, wenn das Multimeter oder dessen Messbereich nicht für den möglichen Strom geeignet ist. Keine Steckverbinder unter Last trennen.</p></div></section><footer>SolarCheck · Offlinefähig nach Installation über HTTPS</footer>
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#102b31">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>SolarCheck V3</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<style>
+:root{
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  color-scheme:dark;
+  --bg:#07191c;--panel:#123037;--line:#315057;
+  --accent:#a1ed91;--muted:#afc5c7
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:white}
+header{padding:28px 16px 15px;background:#173f3c}
+h1{margin:0;font-size:27px}
+header p{color:var(--muted);margin:7px 0}
+nav{
+  display:flex;gap:6px;padding:10px;
+  background:var(--bg);position:sticky;top:0;z-index:2
+}
+nav button{flex:1;font-size:13px;padding:12px 3px}
+.tab{display:none;padding:5px 14px 55px}
+.tab.active{display:block}
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  padding:17px;border-radius:16px;margin:10px 0 15px
+}
+h2{font-size:18px;margin:0 0 12px}
+p{line-height:1.45}
+label{
+  display:block;font-size:13px;color:var(--muted);
+  margin:12px 0 5px
+}
+input,select,button{
+  width:100%;padding:12px;border-radius:10px;
+  border:1px solid #527078;background:#0b2429;
+  color:white;font:inherit
+}
+button{background:#305b53;font-weight:600}
+button.primary,button.active{
+  background:var(--accent);color:#102b21
+}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:13px;color:var(--muted)}
+.warn{color:#ffcd94}
+.good{color:var(--accent)}
+.status{font-size:13px;color:var(--muted);margin:12px 0}
+.readings{
+  display:flex;justify-content:space-around;
+  text-align:center;margin:18px 0
+}
+.readings strong{display:block;font-size:25px;margin-top:5px}
+.big{font-size:34px;font-weight:700}
+.actions{display:flex;gap:10px}
+.actions button{flex:1}
+.entry{
+  border-top:1px solid var(--line);
+  padding:13px 0;font-size:13px
+}
+.entry strong{font-size:15px}
+video{
+  width:100%;max-height:240px;object-fit:cover;
+  border-radius:12px;background:#061619
+}
+canvas{display:none}
+.meter{
+  height:13px;background:#092328;
+  border-radius:20px;overflow:hidden;margin:14px 0
+}
+.meter span{
+  display:block;height:100%;width:0;
+  background:var(--accent)
+}
+.compass{
+  width:205px;height:205px;border:2px solid #729b9c;
+  border-radius:50%;margin:18px auto;position:relative;
+  background:radial-gradient(circle,#24504d,#0b2429)
+}
+.compass:before{
+  content:"N";position:absolute;top:5px;
+  left:calc(50% - 6px);color:#ffad99
+}
+.needle{
+  width:4px;height:83px;position:absolute;
+  top:19px;left:calc(50% - 2px);
+  background:linear-gradient(#ffad99 50%,#b8d1d5 50%);
+  transform-origin:50% 83px
+}
+.target{
+  width:30px;height:80px;position:absolute;
+  top:calc(50% - 80px);left:calc(50% - 15px);
+  border:2px solid var(--accent);
+  border-radius:15px 15px 3px 3px;
+  transform-origin:50% 80px
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>☀ SolarCheck V3</h1>
+<p>Solarmodule ausrichten und prüfen</p>
+</header>
+
+<nav>
+<button class="active" data-tab="align">Ausrichtung</button>
+<button data-tab="light">Licht</button>
+<button data-tab="test">Modultest</button>
+</nav>
+
+<section id="align" class="tab active">
+
+<div class="card">
+<h2>Standort und Sonnenstand</h2>
+<button class="primary" id="locate">
+📍 Standort bestimmen
+</button>
+<p id="locStatus" class="status">Standort noch nicht bestimmt</p>
+
+<div class="cols">
+<div>
+<label>Breitengrad</label>
+<input id="lat" type="number" step=".0001" value="47.66">
+</div>
+<div>
+<label>Längengrad</label>
+<input id="lon" type="number" step=".0001" value="9.31">
+</div>
+</div>
+
+<div class="readings">
+<div>Sonnenrichtung<strong id="sunAz">–</strong></div>
+<div>Sonnenhöhe<strong id="sunEl">–</strong></div>
+</div>
+<p id="sunState" class="hint"></p>
+</div>
+
+<div class="card">
+<h2>Modul ausrichten</h2>
+
+<div class="cols">
+<div>
+<label>Zielrichtung (°)</label>
+<input id="desiredAz" type="number" value="180">
+</div>
+<div>
+<label>Zielneigung (°)</label>
+<input id="desiredTilt" type="number" value="35">
+</div>
+</div>
+
+<p class="hint">
+180° = Süden. Für hohen Winterertrag kann eine
+steilere Neigung sinnvoll sein.
+</p>
+
+<button id="sensors" class="primary">
+Kompass und Neigung aktivieren
+</button>
+<p id="sensorStatus" class="status">
+Sensoren nicht aktiviert
+</p>
+
+<div class="compass">
+<div class="target" id="target"></div>
+<div class="needle" id="needle"></div>
+</div>
+
+<div class="readings">
+<div>Kompass<strong id="heading">–</strong></div>
+<div>Neigung<strong id="tilt">–</strong></div>
+</div>
+
+<p class="hint">
+Lege das iPhone flach auf die Modulfläche,
+Display nach oben. Die Oberkante soll zur
+oberen Modulkante zeigen. Metall kann den
+Kompass verfälschen.
+</p>
+</div>
+</section>
+
+<section id="light" class="tab">
+
+<div class="card">
+<h2>Lichtverhältnisse vergleichen</h2>
+<p>
+Die Kamera liefert einen relativen Helligkeitsindex.
+Dies ist kein echter Lux- oder W/m²-Messwert.
+</p>
+
+<video id="video" autoplay playsinline muted></video>
+<canvas id="canvas" width="160" height="120"></canvas>
+
+<div class="actions">
+<button id="camera" class="primary">Kamera starten</button>
+<button id="camstop">Stoppen</button>
+</div>
+
+<p id="camStatus" class="status">Kamera aus</p>
+<div class="big"><span id="brightness">–</span> / 100</div>
+<div class="meter"><span id="brightbar"></span></div>
+
+<p class="hint">
+Durch automatische Belichtung können sich die
+Werte verändern. Für einen Vergleich immer
+die gleiche Szene aufnehmen.
+</p>
+
+<label>Externer Lux-Messwert (optional)</label>
+<input id="lux" type="number" min="0"
+placeholder="z. B. 45000">
+</div>
+</section>
+
+<section id="test" class="tab">
+
+<div class="card">
+<h2>Solarmodul testen</h2>
+
+<div class="cols">
+<div>
+<label>Modultyp / Messreihe</label>
+<input id="batch" value="220 W Module">
+</div>
+<div>
+<label>Modulnummer</label>
+<input id="module" placeholder="Modul 1">
+</div>
+<div>
+<label>Leerlaufspannung Voc (V)</label>
+<input id="voc" type="number" step=".01"
+min="0" placeholder="36.5">
+</div>
+<div>
+<label>Kurzschlussstrom Isc (A)</label>
+<input id="isc" type="number" step=".01"
+min="0" placeholder="7.8">
+</div>
+<div>
+<label>Voc laut Typenschild (V)</label>
+<input id="ratedVoc" type="number" step=".01"
+min="0" placeholder="37.2">
+</div>
+<div>
+<label>Isc laut Typenschild (A)</label>
+<input id="ratedIsc" type="number" step=".01"
+min="0" placeholder="8.1">
+</div>
+<div>
+<label>Modultemperatur (°C)</label>
+<input id="temp" type="number" step=".1">
+</div>
+</div>
+
+<label>Wetter</label>
+<select id="sky">
+<option>Sonnig</option>
+<option>Leicht bewölkt</option>
+<option>Bewölkt</option>
+<option>Schatten</option>
+</select>
+
+<label>Notiz</label>
+<input id="note" placeholder="z. B. leichter Schatten">
+
+<p class="hint warn">
+Kurzschlussstrom nur am einzelnen, von allen
+anderen Geräten getrennten Modul mit einem dafür
+geeigneten und ausreichend abgesicherten
+DC-Messgerät messen. Bei einem 10-A-Multimeter
+zuerst den möglichen Isc und die zulässige
+Messdauer prüfen. PV-Steckverbinder nicht unter
+Last trennen.
+</p>
+
+<button id="save" class="primary">
+Messung speichern
+</button>
+
+<p id="testStatus" class="status"></p>
+<div id="comparison"></div>
+</div>
+
+<div class="card">
+<h2>Gespeicherte Messungen</h2>
+<div class="actions">
+<button id="export">CSV exportieren</button>
+<button id="clear">Alle löschen</button>
+</div>
+
+<div id="groupSummary"></div>
+<div id="entries"></div>
+</div>
+
+<div class="card">
+<h2>Auswertung</h2>
+<p class="hint">
+Die App vergleicht die Spannungen und Ströme
+gleicher Module bei ähnlichen Bedingungen.
+
+Abweichungen über 5 % werden als auffällig
+gekennzeichnet. Über 10 % wird eine deutliche
+Warnung angezeigt.
+
+Das ist keine sichere Defektdiagnose.
+</p>
+<p class="hint">
+Voc × Isc ist nicht die tatsächliche Modulleistung.
+Für eine Leistungsprüfung ist eine geeignete
+Lastmessung oder I-V-Kennlinie nötig.
+</p>
+</div>
+
+</section>
+
 <script>
-const $=id=>document.getElementById(id); const round=(x,n=1)=>Number.isFinite(x)?x.toFixed(n):'–';
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.id===b.dataset.tab))});
-function sunPosition(date,lat,lon){ // NOAA approximate solar geometry, azimuth from north clockwise
- const rad=Math.PI/180;let jd=date.getTime()/86400000+2440587.5;let T=(jd-2451545)/36525;
- let L=(280.46646+T*(36000.76983+0.0003032*T))%360, M=357.52911+T*(35999.05029-0.0001537*T),e=0.016708634-T*(0.000042037+0.0000001267*T);
- let C=(1.914602-T*(0.004817+0.000014*T))*Math.sin(M*rad)+(0.019993-0.000101*T)*Math.sin(2*M*rad)+0.000289*Math.sin(3*M*rad);let trueLon=L+C;
- let omega=125.04-1934.136*T,lambda=trueLon-0.00569-0.00478*Math.sin(omega*rad);
- let eps0=23+(26+(21.448-T*(46.815+T*(0.00059-T*0.001813)))/60)/60;let eps=eps0+0.00256*Math.cos(omega*rad);
- let decl=Math.asin(Math.sin(eps*rad)*Math.sin(lambda*rad));let y=Math.tan(eps*rad/2)**2;
- let eq=4/rad*(y*Math.sin(2*L*rad)-2*e*Math.sin(M*rad)+4*e*y*Math.sin(M*rad)*Math.cos(2*L*rad)-0.5*y*y*Math.sin(4*L*rad)-1.25*e*e*Math.sin(2*M*rad));
- let minutes=date.getUTCHours()*60+date.getUTCMinutes()+date.getUTCSeconds()/60;let trueSolarTime=((minutes+eq+4*lon)%1440+1440)%1440;let ha=(trueSolarTime/4-180)*rad;let phi=lat*rad;
- let cosZen=Math.sin(phi)*Math.sin(decl)+Math.cos(phi)*Math.cos(decl)*Math.cos(ha);let elevation=90-Math.acos(Math.max(-1,Math.min(1,cosZen)))/rad;
- let az=(Math.atan2(Math.sin(ha),Math.cos(ha)*Math.sin(phi)-Math.tan(decl)*Math.cos(phi))/rad+180+360)%360;
- return {az,elevation};}
-function updateSun(){let lat=+$('lat').value,lon=+$('lon').value;if(!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180)return;let s=sunPosition(new Date(),lat,lon);$('sunAz').textContent=round(s.az,1)+'°';$('sunEl').textContent=round(s.elevation,1)+'°';$('sunState').textContent=s.elevation<=0?'Die Sonne steht gerade unter dem Horizont.':'Sonnenstand jetzt, automatisch berechnet. Richtung: 0° Nord · 90° Ost · 180° Süd · 270° West.';updateCompass()}
-$('locate').onclick=()=>{if(!navigator.geolocation){$('locStatus').textContent='Standortfunktion nicht verfügbar';return}navigator.geolocation.getCurrentPosition(p=>{$('lat').value=p.coords.latitude.toFixed(5);$('lon').value=p.coords.longitude.toFixed(5);$('locStatus').textContent='Standort bestimmt (± '+Math.round(p.coords.accuracy)+' m)';updateSun()},e=>$('locStatus').textContent='Standort nicht verfügbar: '+e.message,{enableHighAccuracy:true,timeout:15000})};['lat','lon','desiredAz','desiredTilt'].forEach(id=>$(id).addEventListener('input',updateSun));setInterval(updateSun,30000);
-let heading=NaN,tilt=NaN;function updateCompass(){$('heading').textContent=round(heading,0)+'°';$('tilt').textContent=round(tilt,0)+'°';let targ=+$('desiredAz').value||0;$('needle').style.transform=`rotate(${Number.isFinite(heading)?-heading:0}deg)`;$('target').style.transform=`rotate(${targ-(Number.isFinite(heading)?heading:0)}deg)`}
-$('sensors').onclick=async()=>{try{if(typeof DeviceOrientationEvent==='undefined')throw Error('Gerätesensoren sind nicht verfügbar.');if(typeof DeviceOrientationEvent.requestPermission==='function'){let perm=await DeviceOrientationEvent.requestPermission();if(perm!=='granted')throw Error('Sensorfreigabe abgelehnt')}
- window.addEventListener('deviceorientation',e=>{if(typeof e.webkitCompassHeading==='number')heading=e.webkitCompassHeading;else if(e.absolute&&e.alpha!==null)heading=(360-e.alpha)%360;
- if(e.beta!==null&&e.gamma!==null){ // tentative plane tilt relative to gravity; independent of portrait rotation, unsigned
- const b=e.beta*Math.PI/180,g=e.gamma*Math.PI/180;let z=Math.cos(b)*Math.cos(g);tilt=Math.acos(Math.max(-1,Math.min(1,Math.abs(z))))*180/Math.PI;}
- updateCompass()});$('sensorStatus').textContent='Sensoren aktiviert. Sensorwerte sind Orientierungshilfen, keine geeichte Messung.'}catch(e){$('sensorStatus').textContent=e.message}};
-let stream=null,interval=null;function stopCam(){if(interval)clearInterval(interval);interval=null;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('video').srcObject=null;$('camStatus').textContent='Kamera aus'}
-$('camera').onclick=async()=>{try{stopCam();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}},audio:false});$('video').srcObject=stream;await $('video').play();$('camStatus').textContent='Kamera läuft – relativer Helligkeitsindex, nicht Lux';let ctx=$('canvas').getContext('2d',{willReadFrequently:true});interval=setInterval(()=>{if($('video').readyState<2)return;ctx.drawImage($('video'),0,0,160,120);let data=ctx.getImageData(0,0,160,120).data,sum=0;for(let i=0;i<data.length;i+=16)sum+=(0.2126*data[i]+0.7152*data[i+1]+0.0722*data[i+2]);let result=Math.round(sum/(data.length/16)/255*100);$('brightness').textContent=result;$('brightbar').style.width=result+'%'},450)}catch(e){$('camStatus').textContent='Kamera nicht verfügbar: '+e.message}};$('camstop').onclick=stopCam;
-const key='solarcheck_records_v1';let records=[];try{records=JSON.parse(localStorage.getItem(key)||'[]');if(!Array.isArray(records))records=[]}catch{records=[]}function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function median(arr){let a=arr.slice().sort((x,y)=>x-y),m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2}
-function checkRecord(r){let group=records.filter(x=>((x.batch||'Standard')===(r.batch||'Standard'))&&x.sky===r.sky&&x.name!==r.name&&Math.abs(new Date(x.time)-new Date(r.time))<=30*60*1000&&(r.temp===null||x.temp===null||Math.abs(x.temp-r.temp)<=5)&&(r.lux===null||x.lux===null||(Math.max(x.lux,r.lux)>0&&Math.abs(x.lux-r.lux)/Math.max(x.lux,r.lux)<=0.15)));if(group.length<2)return {text:'Zu wenige vergleichbare Module (mind. 3 insgesamt, höchstens 30 Minuten Abstand, gleiche Bewölkung).',level:'hint'};let baseline=median(group.map(x=>x.voltage));let diff=baseline?100*(r.voltage/baseline-1):0;let absolute=Math.abs(diff);return {text:`Vergleich zum Median der anderen ${group.length} Module (${round(baseline,2)} V): ${diff>=0?'+':''}${round(diff,1)} %. `+(absolute>=10?'Deutliche Abweichung – prüfen.':absolute>=5?'Auffällig – erneut messen.':'Keine große Spannungsabweichung festgestellt.')+' Das ist keine Defekt- oder Leistungsaussage.',level:absolute>=10?'warn':absolute>=5?'warn':'good'};}
-function render(){let summary=$('groupSummary');let groupNames=[...new Set(records.map(r=>r.batch||'Standard'))];summary.innerHTML=groupNames.map(b=>{let a=records.filter(r=>(r.batch||'Standard')===b), med=median(a.map(r=>r.voltage));return `<p class="hint"><strong>${escapeHTML(b)}</strong>: ${a.length} Messungen · Median ${round(med,2)} V. Für belastbaren Vergleich identische Messbedingungen beachten.</p>`}).join('');let box=$('entries');box.innerHTML=records.length?'': '<p class="hint">Noch keine Messung gespeichert.</p>';records.slice().reverse().forEach(r=>{let el=document.createElement('div');el.className='entry';let pct=r.rated?` · ${round(r.voltage/r.rated*100)} % des Typenschild-Voc`:'';let assessment=checkRecord(r);el.innerHTML=`<strong>${escapeHTML(r.name)}</strong> · ${escapeHTML(r.batch||'Standard')} · ${escapeHTML(new Date(r.time).toLocaleString('de-DE'))}<div>${round(r.voltage,2)} V${pct} · ${escapeHTML(r.sky)}${r.lux!==null&&r.lux!==undefined?' · '+r.lux+' Lux (extern)':''}</div><small>${escapeHTML(r.note||'')}${r.temp!==null?' · '+r.temp+' °C':''}</small><p class="${assessment.level}" style="font-size:12px">${escapeHTML(assessment.text)}</p>`;box.append(el)})}
-$('save').onclick=()=>{let name=$('module').value.trim()||`Modul ${records.length+1}`,voltage=parseFloat($('voc').value),rated=$('ratedVoc').value.trim()===''?null:parseFloat($('ratedVoc').value),temp=$('temp').value.trim()===''?null:parseFloat($('temp').value);if(!Number.isFinite(voltage)||voltage<0||voltage>1500){$('testStatus').textContent='Bitte gültige Spannung eingeben (0–1500 V).';return}if(rated!==null&&(!Number.isFinite(rated)||rated<=0)){ $('testStatus').textContent='Ungültige Typenschildspannung';return}let luxRaw=$('lux').value.trim(),lux=luxRaw===''?null:Number(luxRaw);if(lux!==null&&(!Number.isFinite(lux)||lux<0)){$('testStatus').textContent='Ungültiger Lux-Wert';return}let r={time:new Date().toISOString(),batch:$('batch').value.trim()||'Standard',name,voltage,rated,temp:Number.isFinite(temp)?temp:null,lux,sky:$('sky').value,note:$('note').value.trim()};records.push(r);localStorage.setItem(key,JSON.stringify(records));$('testStatus').textContent='Messung lokal gespeichert';$('comparison').innerHTML=rated?`<p class="hint">Messwert/Typenschild: <strong>${round(voltage/rated*100)} %</strong>. Kein Wirkungsgrad- oder Leistungswert! Temperatur und Licht verändern Voc.</p>`:'';render()};
-$('clear').onclick=()=>{if(confirm('Wirklich alle gespeicherten Messungen löschen?')){records=[];localStorage.removeItem(key);render()}};
-$('export').onclick=()=>{let rows=[['Zeit','Messreihe','Modul','Voc gemessen V','Voc Typenschild V','Temperatur C','Licht','Lux extern','Notiz'],...records.map(r=>[r.time,r.batch||'Standard',r.name,r.voltage,r.rated??'',r.temp??'',r.sky,r.lux??'',r.note])];let csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='solarcheck-messungen.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
-render();updateSun();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-</script></body></html>
+const $=id=>document.getElementById(id);
+const round=(n,d=1)=>
+  Number.isFinite(n)?n.toFixed(d):"–";
+
+document.querySelectorAll("nav button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("nav button").forEach(x=>
+      x.classList.toggle("active",x===b));
+    document.querySelectorAll(".tab").forEach(x=>
+      x.classList.toggle("active",x.id===b.dataset.tab));
+  };
+});
+
+function sunPosition(date,lat,lon){
+  const r=Math.PI/180;
+  const jd=date.getTime()/86400000+2440587.5;
+  const T=(jd-2451545)/36525;
+  const L=(280.46646+T*(36000.76983+
+    .0003032*T))%360;
+  const M=357.52911+T*(35999.05029-
+    .0001537*T);
+  const e=.016708634-T*(.000042037+
+    .0000001267*T);
+  const C=(1.914602-T*(.004817+
+    .000014*T))*Math.sin(M*r)
+    +(.019993-.000101*T)*Math.sin(2*M*r)
+    +.000289*Math.sin(3*M*r);
+  const omega=125.04-1934.136*T;
+  const lambda=L+C-.00569-.00478*
+    Math.sin(omega*r);
+  const eps0=23+(26+(21.448-T*(46.815+
+    T*(.00059-T*.001813)))/60)/60;
+  const eps=eps0+.00256*Math.cos(omega*r);
+  const dec=Math.asin(Math.sin(eps*r)*
+    Math.sin(lambda*r));
+  const y=Math.tan(eps*r/2)**2;
+  const eq=4/r*(y*Math.sin(2*L*r)
+    -2*e*Math.sin(M*r)
+    +4*e*y*Math.sin(M*r)*Math.cos(2*L*r)
+    -.5*y*y*Math.sin(4*L*r)
+    -1.25*e*e*Math.sin(2*M*r));
+  const minutes=date.getUTCHours()*60+
+    date.getUTCMinutes()+date.getUTCSeconds()/60;
+  const time=((minutes+eq+4*lon)%1440+
+    1440)%1440;
+  const ha=(time/4-180)*r;
+  const phi=lat*r;
+  const cosz=Math.sin(phi)*Math.sin(dec)+
+    Math.cos(phi)*Math.cos(dec)*Math.cos(ha);
+  const elevation=90-Math.acos(
+    Math.max(-1,Math.min(1,cosz)))/r;
+  const az=(Math.atan2(Math.sin(ha),
+    Math.cos(ha)*Math.sin(phi)-
+    Math.tan(dec)*Math.cos(phi))/r+540)%360;
+  return {az,elevation};
+}
+
+function updateSun(){
+  const lat=parseFloat($("lat").value);
+  const lon=parseFloat($("lon").value);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||
+    Math.abs(lat)>90||Math.abs(lon)>180)return;
+  const s=sunPosition(new Date(),lat,lon);
+  $("sunAz").textContent=round(s.az)+"°";
+  $("sunEl").textContent=round(s.elevation)+"°";
+  $("sunState").textContent=s.elevation>0?
+    "Aktueller Sonnenstand":
+    "Die Sonne ist unter dem Horizont.";
+  updateCompass();
+}
+setInterval(updateSun,30000);
+
+$("locate").onclick=()=>{
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(p=>{
+    $("lat").value=p.coords.latitude.toFixed(5);
+    $("lon").value=p.coords.longitude.toFixed(5);
+    $("locStatus").textContent="Standort bestimmt";
+    updateSun();
+  },e=>{
+    $("locStatus").textContent=e.message;
+  },{enableHighAccuracy:true,timeout:15000});
+};
+
+["lat","lon","desiredAz"].forEach(id=>{
+  $(id).addEventListener("input",updateSun);
+});
+
+let heading=NaN,tilt=NaN;
+
+function updateCompass(){
+  $("heading").textContent=round(heading,0)+"°";
+  $("tilt").textContent=round(tilt,0)+"°";
+  $("needle").style.transform="rotate("+
+    (Number.isFinite(heading)?-heading:0)+"deg)";
+  $("target").style.transform="rotate("+
+    (Number($("desiredAz").value)-
+    (Number.isFinite(heading)?heading:0))+"deg)";
+}
+
+$("sensors").onclick=async()=>{
+  try{
+    if(typeof DeviceOrientationEvent==="undefined")
+      throw Error("Sensoren nicht verfügbar");
+    if(typeof DeviceOrientationEvent.requestPermission===
+      "function"){
+      const p=await DeviceOrientationEvent.requestPermission();
+      if(p!=="granted")
+        throw Error("Berechtigung verweigert");
+    }
+    window.addEventListener("deviceorientation",e=>{
+      if(typeof e.webkitCompassHeading==="number")
+        heading=e.webkitCompassHeading;
+      else if(e.absolute&&e.alpha!=null)
+        heading=(360-e.alpha)%360;
+      if(e.beta!=null&&e.gamma!=null){
+        const b=e.beta*Math.PI/180;
+        const g=e.gamma*Math.PI/180;
+        const z=Math.cos(b)*Math.cos(g);
+        tilt=Math.acos(Math.max(-1,
+          Math.min(1,Math.abs(z))))*180/Math.PI;
+      }
+      updateCompass();
+    });
+    $("sensorStatus").textContent="Sensoren aktiv";
+  }catch(e){
+    $("sensorStatus").textContent=e.message;
+  }
+};
+
+let stream=null,timer=null;
+
+function stopCamera(){
+  if(timer)clearInterval(timer);
+  timer=null;
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  stream=null;
+  $("video").srcObject=null;
+  $("camStatus").textContent="Kamera aus";
+}
+
+$("camstop").onclick=stopCamera;
+
+$("camera").onclick=async()=>{
+  try{
+    stopCamera();
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:"environment"},audio:false
+    });
+    $("video").srcObject=stream;
+    await $("video").play();
+    $("camStatus").textContent="Kamera aktiv";
+    const ctx=$("canvas").getContext("2d",{
+      willReadFrequently:true
+    });
+    timer=setInterval(()=>{
+      if($("video").readyState<2)return;
+      ctx.drawImage($("video"),0,0,160,120);
+      const data=ctx.getImageData(0,0,160,120).data;
+      let sum=0,count=0;
+      for(let i=0;i<data.length;i+=16){
+        sum+=.2126*data[i]+.7152*data[i+1]+
+          .0722*data[i+2];
+        count++;
+      }
+      const v=Math.round(sum/count/255*100);
+      $("brightness").textContent=v;
+      $("brightbar").style.width=v+"%";
+    },500);
+  }catch(e){
+    $("camStatus").textContent=e.message;
+  }
+};
+
+const KEY="solarcheck_records_v1";
+let records=[];
+try{
+  records=JSON.parse(localStorage.getItem(KEY)||"[]");
+  if(!Array.isArray(records))records=[];
+}catch(e){records=[]}
+
+function safe(s){
+  return String(s).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",
+    '"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function median(arr){
+  const a=[...arr].sort((x,y)=>x-y);
+  const m=Math.floor(a.length/2);
+  return a.length%2?a[m]:(a[m-1]+a[m])/2;
+}
+
+function assess(r){
+  const group=records.filter(x=>
+    x!==r&&x.batch===r.batch&&
+    x.name!==r.name&&x.sky===r.sky&&
+    Math.abs(new Date(x.time)-
+      new Date(r.time))<=1800000&&
+    (r.temp==null||x.temp==null||
+      Math.abs(r.temp-x.temp)<=5)&&
+    (r.lux==null||x.lux==null||
+      Math.abs(r.lux-x.lux)/
+      Math.max(r.lux,x.lux,1)<=.15)
+  );
+  if(group.length<2)
+    return "Mindestens 3 vergleichbare Module nötig.";
+
+  const refV=median(group.map(x=>x.voltage));
+  const dv=refV?100*(r.voltage/refV-1):0;
+  let di=null;
+  const amps=group.filter(x=>Number.isFinite(x.isc));
+  if(Number.isFinite(r.isc)&&amps.length>=2){
+    const refA=median(amps.map(x=>x.isc));
+    di=refA?100*(r.isc/refA-1):0;
+  }
+
+  const deviation=Math.max(Math.abs(dv),
+    di==null?0:Math.abs(di));
+  const state=deviation>=10?
+    "Deutlich auffällig":deviation>=5?
+    "Auffällig":"Keine große Abweichung";
+
+  return "Voc: "+round(dv)+" %"+
+    (di==null?"":" · Isc: "+round(di)+" %")+
+    " · "+state+". Keine sichere Defektdiagnose.";
+}
+
+function render(){
+  const list=$("entries");
+  list.innerHTML="";
+  const batches=[...new Set(records.map(r=>r.batch))];
+  $("groupSummary").innerHTML=batches.map(b=>{
+    const a=records.filter(r=>r.batch===b);
+    const v=median(a.map(r=>r.voltage));
+    const amps=a.filter(r=>Number.isFinite(r.isc));
+    return "<p class='hint'><b>"+safe(b)+"</b>: "+
+      a.length+" Messungen · Voc-Median "+
+      round(v,2)+" V"+
+      (amps.length?" · Isc-Median "+
+        round(median(amps.map(r=>r.isc)),2)+" A":"")+
+      "</p>";
+  }).join("");
+
+  if(!records.length){
+    list.textContent="Noch keine Messungen.";
+    return;
+  }
+
+  records.slice().reverse().forEach(r=>{
+    const div=document.createElement("div");
+    div.className="entry";
+    div.innerHTML=
+      "<strong>"+safe(r.name)+"</strong> · "+
+      safe(r.batch)+"<p>"+
+      round(r.voltage,2)+" V"+
+      (Number.isFinite(r.isc)?
+        " · "+round(r.isc,2)+" A":"")+
+      " · "+safe(r.sky)+"</p>"+
+      "<p>"+safe(assess(r))+"</p>"+
+      "<small>"+safe(new Date(r.time).
+        toLocaleString("de-DE"))+"</small>";
+    list.appendChild(div);
+  });
+}
+
+$("save").onclick=()=>{
+  const voltage=Number($("voc").value);
+  const isc=$("isc").value.trim()===""?
+    null:Number($("isc").value);
+  const rated=$("ratedVoc").value.trim()===""?
+    null:Number($("ratedVoc").value);
+  const ratedIsc=$("ratedIsc").value.trim()===""?
+    null:Number($("ratedIsc").value);
+  const temp=$("temp").value.trim()===""?
+    null:Number($("temp").value);
+  const lux=$("lux").value.trim()===""?
+    null:Number($("lux").value);
+
+  if($("voc").value.trim()===""||
+    !Number.isFinite(voltage)||voltage<0||
+    voltage>1500){
+    $("testStatus").textContent="Ungültige Spannung";
+    return;
+  }
+  if(isc!==null&&(!Number.isFinite(isc)||
+    isc<0||isc>100)){
+    $("testStatus").textContent="Ungültiger Strom";
+    return;
+  }
+  if((rated!==null&&(!Number.isFinite(rated)||
+    rated<=0))||
+    (ratedIsc!==null&&
+    (!Number.isFinite(ratedIsc)||ratedIsc<=0))){
+    $("testStatus").textContent=
+      "Ungültiger Typenschildwert";
+    return;
+  }
+
+  const record={
+    time:new Date().toISOString(),
+    batch:$("batch").value.trim()||"Standard",
+    name:$("module").value.trim()||
+      "Modul "+(records.length+1),
+    voltage,isc,rated,ratedIsc,
+    temp:Number.isFinite(temp)?temp:null,
+    lux:Number.isFinite(lux)?lux:null,
+    sky:$("sky").value,
+    note:$("note").value.trim()
+  };
+  records.push(record);
+  try{
+    localStorage.setItem(KEY,JSON.stringify(records));
+    $("testStatus").textContent="Messung gespeichert";
+  }catch(e){
+    $("testStatus").textContent="Speichern fehlgeschlagen";
+  }
+  $("comparison").textContent=
+    rated?"Voc entspricht "+round(voltage/rated*100)+
+      " % des Typenschildwerts. Kein Leistungswert.":"";
+  render();
+};
+
+$("clear").onclick=()=>{
+  if(confirm("Alle Messungen löschen?")){
+    records=[];
+    localStorage.removeItem(KEY);
+    render();
+  }
+};
+
+$("export").onclick=()=>{
+  const rows=[
+    ["Zeit","Messreihe","Modul","Voc V","Isc A",
+     "Voc Nenn V","Isc Nenn A","Temperatur C",
+     "Wetter","Lux","Notiz"],
+    ...records.map(r=>[
+      r.time,r.batch,r.name,r.voltage,r.isc??"",
+      r.rated??"",r.ratedIsc??"",r.temp??"",
+      r.sky,r.lux??"",r.note??""
+    ])
+  ];
+  const csv="\ufeff"+rows.map(row=>
+    row.map(v=>'"'+String(v).replace(/"/g,'""')+'"')
+      .join(";")
+  ).join("\r\n");
+  const url=URL.createObjectURL(new Blob([csv],{
+    type:"text/csv;charset=utf-8"
+  }));
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="SolarCheck_Messungen.csv";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
+render();
+updateSun();
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
